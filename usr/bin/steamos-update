@@ -40,13 +40,17 @@ function clean_progress {
   done
 }
 
+function get_updates_number {
+  pacman -Qu | grep -v "[ignored]" | wc -l
+}
+
 function check_for_updates {
   if ! pacman -Syy > /dev/null 2>&1; then
     exit 1
   fi
 
-  TOTAL=$(pacman -Qu | wc -l)
-  if [ $? -eq 0 ]; then
+  TOTAL=$(get_updates_number)
+  if [ $TOTAL -gt 0 ]; then
     printf "Upgrade:\u00a0%d\u00a0Packages\n" $TOTAL
     exit 0
   else
@@ -56,8 +60,8 @@ function check_for_updates {
 
 function do_update {
   # pacman update
-  TOTAL=$(pacman -Qu | wc -l)
-  if [ $? -ne 0 ]; then
+  TOTAL=$(get_updates_number)
+  if [ $TOTAL -le 0 ]; then
     exit 7 # no update available
   fi
   pacman -Syu --noconfirm 2>&1 | \
